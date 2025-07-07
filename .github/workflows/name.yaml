@@ -1,22 +1,21 @@
-name: Test
-
-on: [push, pull_request]
+on: [push]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Python 3.9
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
 
-    - name: Install project dependencies
-      run: pip install . && pip install pytest
+      - name: Install dependencies
+        run: |
+          pip install . --no-cache-dir && \
+            pip install pytest
 
-    - name: Run tests
-      run: python -m pytest
+      - name: Run tests
+        run: python -m pytest
