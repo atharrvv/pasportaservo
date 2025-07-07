@@ -14,8 +14,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install . --no-cache-dir && \
-            pip install pytest
+          pip install pytest
 
       - name: Run tests
         run: python -m pytest
