@@ -1,20 +1,28 @@
-on: [push]
+name: Build Project
+
+on:
+  push:
+    branches: [ master ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
 
-      - name: Install dependencies
-        run: |
-          pip install pytest
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
 
-      - name: Run tests
-        run: python -m pytest
+    - name: Build Artifact
+      run: |
+        mkdir artifacts
+        cp *.py artifacts
+        cp *.txt artifacts
+        cp *.cfg artifacts
+        cp *.toml artifacts
+        zip -r artifacts.zip artifacts
