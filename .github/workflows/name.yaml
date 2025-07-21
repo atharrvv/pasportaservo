@@ -1,28 +1,19 @@
-name: Build Project
+name: Tests
 
-on:
-  push:
-    branches: [ master ]
+on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v4
+    - uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.9'
 
-    - name: Install Dependencies
-      run: pip install -r requirements.txt
+    - name: Install dependencies
+      run: poetry install
 
-    - name: Build Artifact
-      run: |
-        mkdir artifacts
-        cp *.py artifacts
-        cp *.txt artifacts
-        cp *.cfg artifacts
-        cp *.toml artifacts
-        zip -r artifacts.zip artifacts
+    - name: Run tests
+      run: pytest
