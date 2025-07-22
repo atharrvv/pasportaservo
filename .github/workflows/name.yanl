@@ -2,34 +2,29 @@ name: CI/CD
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup Python
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ secrets.PYTHON_VERSION }}  # Use environment variable for Python version
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          poetry install --extras dev
-
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
       - name: Run tests
-        run: poetry run pytest --cov=${{ secrets.COVERAGE }}
-        env:
-          COVERAGE: ${{ secrets.COVERAGE_TARGET }}
-      - name: Generate Coverage Report
-        if: ${{ partitions.matrix.python_version }}
-        uses: actions/upload-coverage-report@v1
+        run: pytest --cov=pasportaservo tests/
+      - name: Code Coverage
+        uses: codecov/codecov-action@v3
         with:
-          coverage-format: ${{matrix.coverage_format}}
-          coverage-report-file: ./coverage.xml
-      - name: Build Artifacts
-        run: poetry build
+          file: coverage.xml
