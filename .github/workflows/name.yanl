@@ -1,0 +1,20 @@
+name: CI/CD
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
+      - name: Run unit tests
+        run: pytest ${{ matrix.python_version }}
+      - name: Build artifact
+        run: python setup.py sdist bdist_wheel
