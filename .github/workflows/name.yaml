@@ -6,16 +6,9 @@ on:
       - master
 
 jobs:
-  test:
-    name: Test Python Application
+  build:
+    name: Build and Package Python Application
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-
-    env:
-      CACHE_KEY: ${{ runner.os }}-pip-${{ matrix.python-version }}
 
     steps:
     # Checkout repository
@@ -23,37 +16,23 @@ jobs:
       uses: actions/checkout@v3
 
     # Setup Python
-    - name: Setup Python ${{ matrix.python-version }}
+    - name: Setup Python 3.12
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.12"
 
-    # Cache dependencies
-    - name: Cache pip packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ env.CACHE_KEY }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    # Install dependencies
-    - name: Install Dependencies
+    # Install build dependencies
+    - name: Install Build Dependencies
       run: |
-        if [ -f requirements.txt ]; then
-          pip install --upgrade pip
-          pip install -r requirements.txt
-        else
-          echo "requirements.txt not found, skipping dependency installation."
-          exit 1
-        fi
+        pip install --upgrade pip
+        pip install build
 
-    # Run tests
-    - name: Run Tests
+    # Build Python package
+    - name: Build Package
       run: |
-        if [ -f pytest.ini ] || [ -d tests ]; then
-          python -m pytest
+        if [ -f setup.py ]; then
+          python -m build
         else
-          echo "No tests detected."
+          echo "setup.py not found, skipping build."
           exit 1
         fi
