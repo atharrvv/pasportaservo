@@ -15,7 +15,7 @@ jobs:
     steps:
       # Step: Checkout code
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step: Setup Python
       - name: Set up Python ${{ matrix.python-version }}
