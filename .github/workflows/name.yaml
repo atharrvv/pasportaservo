@@ -1,113 +1,48 @@
 name: Test and Build
-
-on:
-  push:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
   test:
-    name: Test Application
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: [3.12]
     steps:
-      # Step: Checkout code
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # Step: Setup Python
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-
-      # # Step: Cache dependencies
-      # - name: Cache dependencies
-      #   uses: actions/cache@v4
-      #   id: cache-dependencies
-      #   with:
-      #     path: ~/.cache/pip
-      #     key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('requirements*.txt', 'setup.py') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-pip-${{ matrix.python-version }}-
-      #       ${{ runner.os }}-pip-
-
-      # Step: Install dependencies
-      - name: Install dependencies
+      - name: Install dependencies and run tests
         run: |
-          if [ -f "requirements.txt" ]; then
-            pip install -r requirements.txt
+          if [ -d "tests" ]; then
+            echo "Tests directory found, running tests..."
+            pip install pytest
+            python -m pytest tests/
           else
-            echo "⚠️ requirements.txt not found, skipping dependency installation."
+            echo "No tests directory found, skipping tests"
           fi
-
-      # Step: Install test dependencies
-      - name: Install test dependencies
-        run: |
-          if [ -f "requirements-test.txt" ]; then
-            pip install -r requirements-test.txt
-          else
-            echo "⚠️ requirements-test.txt not found, using only primary dependencies."
-          fi
-
-      # Step: Run tests
-      - name: Run pytest
-        run: |
-          if [ -d "tests/" ]; then
-            python -m pytest --cov || echo "⚠️ Tests failed but continuing for analysis."
-          else
-            echo "⚠️ No tests directory found, skipping tests."
-          fi
-
-      # Step: Upload coverage report
-      - name: Upload coverage results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: .coverage,*coverage.xml
 
   build:
-    name: Build Application
-    runs-on: ubuntu-latest
     needs: test
+    runs-on: ubuntu-latest
     steps:
-      # Step: Checkout code
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      # Step: Setup Python
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.12
-
-
-      # Step: Install build dependencies
-      - name: Install build dependencies
+          python-version: 3.11
+      - name: Build project
         run: |
-          if [ -f "requirements.txt" ]; then
-            pip install -r requirements.txt
-          else
-            echo "⚠️ requirements.txt not found, proceeding anyway."
-          fi
-
-      # Step: Build package
-      - name: Build Package
-        run: |
-          if [ -f "setup.py" ]; then
+          if [ -f "pyproject.toml" ] || [ -f "setup.py" ] || [ -f "setup.cfg" ] ; then
+            echo "Build configuration found, building..."
+            pip install build
             python -m build
-            echo "✅ Build completed successfully."
+            [ -d "dist" ] && echo "Build successful"
           else
-            echo "⚠️ setup.py not found, skipping build step."
+            echo "No build configuration found, skipping build"
           fi
-
-      # Step: Upload build artifacts
-      - name: Upload built artifacts
-        if: always()
+      - name: Upload artifacts
+        if: hashFiles('dist/**') != ''
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: dist/*
+          path: dist/
